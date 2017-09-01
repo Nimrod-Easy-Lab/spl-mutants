@@ -11,7 +11,5 @@ class ImpactAnalysisRunner:
 
     def run(self):
         for mutant in self.mutants:
-            result = self.runner.run_with_profiling(self.original_program,
-                                                    mutant.get('file'))
-            self.state.set_impact_analysis(mutant=mutant, result=result[0])
-
+            result = self.runner.run(self.original_program, mutant.get('file'))
+            self.state.set_impact_analysis(mutant=mutant, result=result)

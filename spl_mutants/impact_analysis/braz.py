@@ -1,4 +1,5 @@
 import re
+import datetime
 
 from spl_mutants.impact_analysis.utils.utils import append_if_not_in
 
@@ -19,8 +20,6 @@ class Braz:
         result.changes = get_changes(self.old_code, self.new_code)
         result.changed_lines = changed_lines(self.old_code, self.new_code)
 
-        print(result.changes)
-
         self._find_macro_lines(self.new_code, result)
         self._get_all_macros(result)
         self._get_changed_macros(result)
@@ -36,10 +35,11 @@ class Braz:
         return result
 
     def run(self, verbose=False):
+        start_time = datetime.datetime.now()
         result = self._run()
 
         self._union_with_reverse_analysis(result)
-
+        result.elapsed_time = datetime.datetime.now() - start_time
         if verbose:
             self._verbose(result)
 

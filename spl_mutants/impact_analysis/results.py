@@ -18,3 +18,4 @@ class ImpactAnalysisResult:
         self.impact_analysis_time = None
         self.compile_time = None
         self.diff_time = None
+        self.elapsed_time = None

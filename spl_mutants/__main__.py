@@ -1,11 +1,13 @@
 import os
 import shutil
 
-from spl_mutants.state import StateConfig, State
+from spl_mutants.db.impact_analisys_state import ImpactAnalysisState
+from spl_mutants.db.state import Config, State
 from spl_mutants.impact_analysis_runner import ImpactAnalysisRunner
 
+
 def main():
-    config = StateConfig()
+    config = Config()
 
     config.output_dir = os.path.abspath('../tests/examples/test_c/mutants'
                                         '/output')
@@ -18,10 +20,13 @@ def main():
     os.mkdir(config.output_dir)
 
     state = State(config=config)
+    impact_analysis_state = ImpactAnalysisState(state=state)
 
-    ImpactAnalysisRunner(state=state).run()
+    print(state.output_dir)
 
-    print(state.get_mutants())
+    ImpactAnalysisRunner(state=impact_analysis_state).run()
+
+    print(impact_analysis_state.get_mutants())
 
 if __name__ == '__main__':
     main()
