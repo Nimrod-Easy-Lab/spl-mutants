@@ -102,3 +102,7 @@ ENV/
 
 .idea/
 *.iml
+
+_db.json
+*.out
+.dev/

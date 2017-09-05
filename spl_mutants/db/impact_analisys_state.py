@@ -3,7 +3,7 @@ import sys
 import itertools
 
 from tinydb import Query
-from tinydb.operations import set
+from tinydb.operations import set, add
 
 
 class ImpactAnalysisState:
@@ -20,13 +20,23 @@ class ImpactAnalysisState:
         return self.state.source_file
 
     def set_impact_analysis(self, mutant, result):
+
+        impacted_products = _impacted_products(result.impacted_macros)
+
         self.db.update(
             set('impact_analysis', {
                 'impacted_features': result.impacted_macros,
-                'impacted_products': _impacted_products(result.impacted_macros),
+                'impacted_products': impacted_products,
+                'all_features': result.all_macros,
+                'all_features_len': len(result.all_macros),
                 'elapsed_time': str(result.elapsed_time)
             }),
             Query().name == mutant.get('name'))
+
+        self.state.db.update(
+            add('all_to_test', 2**len(result.all_macros)),
+            Query().type == 'config'
+        )
 
     def _set_mutants_table(self, path):
         mutant_files = [file for file in os.listdir(path)

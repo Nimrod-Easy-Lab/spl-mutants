@@ -18,11 +18,15 @@ class State:
     def __init__(self, config):
         self.db = TinyDB(os.path.join(config.output_dir, config.state_file))
         self.db.insert({
+            'type': 'config',
             'source_dir': config.source_dir,
             'source_file': config.source_file,
             'include_dirs': config.include_dirs,
             'output_dir': config.output_dir,
             'mutants_dir': config.mutants_dir,
+            'product_versions': 0,
+            'products_dir': None,
+            'all_to_test': 0
         })
 
     def _state(self):
@@ -47,3 +51,7 @@ class State:
     @property
     def mutants_dir(self):
         return self._state().get('mutants_dir')
+
+    @property
+    def products_dir(self):
+        return self._state().get('products_dir')
