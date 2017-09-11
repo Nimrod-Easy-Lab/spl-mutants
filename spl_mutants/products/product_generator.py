@@ -43,6 +43,10 @@ class ProductGenerator:
             for mutant in product['mutants']:
                 self.db.insert(_initialize_mutant(mutant, product, product_dir))
 
+    def is_done(self):
+        return (len(self.db.all()) > 0 and
+                len(self.db.search(Query().generated == False)) == 0)
+
     def generate(self, params=None):
         mutants = self.db.all()
         mutants_total = len(mutants)
@@ -64,7 +68,8 @@ class ProductGenerator:
                 config.input_file = mutant['file']
                 config.source_file = self.state.source_file
 
-                Executor(config=config, strategy=self.gcc_strategy).run()
+                Executor(config=config,
+                         strategy=self.gcc_strategy).run(log=True)
                 self.db.update(
                     set('generated', True),
                     (Query().name == mutant['name']) &

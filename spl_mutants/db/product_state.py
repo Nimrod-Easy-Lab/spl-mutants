@@ -1,4 +1,5 @@
 import hashlib
+import itertools
 
 from tinydb import Query
 from tinydb.operations import increment
@@ -18,29 +19,32 @@ class ProductState:
         mutants = self.impact_analysis_state.get_mutants()
 
         for mutant in mutants:
-            products = mutant['impact_analysis']['impacted_products']
+            products = _impacted_products(mutant['impact_analysis'])
 
             for product in products:
-                product_code = _gen_product_code(product)
+                self._insert_product(product, mutant)
 
-                has_product_code = len(
-                    self.db.search(Query().product_code == product_code)) > 0
+    def _insert_product(self, product, mutant):
+        product_code = _gen_product_code(product)
 
-                self.state.db.update(
-                    increment('product_versions'),
-                    Query().type == 'config'
-                )
+        has_product_code = len(
+            self.db.search(Query().product_code == product_code)) > 0
 
-                if has_product_code:
-                    self.db.update(append('mutants', _mutant_dict(mutant)),
-                                   Query().product_code == product_code)
+        self.state.db.update(
+            increment('product_versions'),
+            Query().type == 'config'
+        )
 
-                else:
-                    self.db.insert({
-                        'product_code': product_code,
-                        'features': product,
-                        'mutants': [_mutant_dict(mutant)]
-                    })
+        if has_product_code:
+            self.db.update(append('mutants', _mutant_dict(mutant)),
+                           Query().product_code == product_code)
+
+        else:
+            self.db.insert({
+                'product_code': product_code,
+                'features': product,
+                'mutants': [_mutant_dict(mutant)]
+            })
 
 
 def _mutant_dict(mutant):
@@ -53,3 +57,17 @@ def _mutant_dict(mutant):
 
 def _gen_product_code(features):
     return hashlib.md5(str(features).encode('utf-8')).hexdigest()
+
+
+def _impacted_products(impact_analysis):
+    combinations = []
+    impacted_features = impact_analysis['impacted_features']
+    not_impacted_features = impact_analysis['not_impacted_features']
+
+    for i in range(len(impacted_features) + 1):
+        for combination in itertools.combinations(impacted_features, i):
+            combinations.append(list(combination))
+            if not_impacted_features:
+                combinations.append(list(combination) + not_impacted_features)
+
+    return combinations

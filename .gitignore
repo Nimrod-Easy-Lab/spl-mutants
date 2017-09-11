@@ -106,3 +106,4 @@ ENV/
 _db.json
 *.out
 .dev/
+*.out.*

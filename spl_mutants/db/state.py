@@ -26,7 +26,8 @@ class State:
             'mutants_dir': config.mutants_dir,
             'product_versions': 0,
             'products_dir': None,
-            'all_to_test': 0
+            'products': 0,
+            'products_impacted': 0
         })
 
     def _state(self):

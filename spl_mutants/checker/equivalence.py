@@ -1,7 +1,12 @@
 import os
-import subprocess
+import json
 
-from spl_mutants.products.product_generator import get_output_filename
+from tinydb import Query
+from pygments import highlight
+from pygments.lexers.javascript import JavascriptLexer
+from pygments.formatters.terminal import TerminalFormatter
+
+from spl_mutants.checker.common import get_filename, diff
 
 
 class EquivalenceChecker:
@@ -13,19 +18,19 @@ class EquivalenceChecker:
         self.products_db = self.state.db.table('products')
         self.db = self.state.db.table('equivalence')
 
-    def run(self):
+    def run(self, verbose=False):
         products = self.products_db.all()
 
         for product in products:
             product_dir = os.path.join(self.state.products_dir,
                                        product['product_code'])
             original_product = os.path.join(
-                product_dir, _get_filename(self.state.source_file))
+                product_dir, get_filename(self.state.source_file))
 
             for mutant in product['mutants']:
                 mutant_product = os.path.join(
-                    product_dir, _get_filename(mutant['file']))
-                diff = _diff(
+                    product_dir, get_filename(mutant['file']))
+                diff_result = diff(
                     ['diff', '--binary', original_product, mutant_product])
 
                 self.db.insert(
@@ -35,19 +40,36 @@ class EquivalenceChecker:
                         'file': mutant['file'],
                         'product': product['features'],
                         'product_code': product['product_code'],
-                        'useless': diff[0]
+                        'useless': diff_result[0]
                     }
                 )
 
+        if verbose:
+            self._print_result()
 
-def _get_filename(file):
-    return get_output_filename(file)
+    def _print_result(self):
+        output = {
+            'total_mutants':
+                len(self.state.db.table('mutants').all()),
+            'products_total':
+                self.state.db.search(
+                    Query().type == 'config')[0]['products'],
+            'products_impacted':
+                self.state.db.search(
+                    Query().type == 'config')[0]['products_impacted'],
+            'products_useful':
+                len(self.state.db.table('equivalence').search(
+                    Query().useless == False)),
+            'products_equivalent':
+                len(self.state.db.table('equivalence').search(
+                    Query().useless == True))
+        }
 
+        print('\n=== EQUIVALENCE CHECKER ===')
 
-def _diff(command_line):
-    output = subprocess.getstatusoutput(' '.join(command_line))
+        print(highlight(
+            code=json.dumps(output, indent=True, sort_keys=True),
+            lexer=JavascriptLexer(),
+            formatter=TerminalFormatter()
+        ))
 
-    if output[0] == 0:
-        return True, output
-    else:
-        return False, output

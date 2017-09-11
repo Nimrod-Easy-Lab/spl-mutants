@@ -76,9 +76,21 @@ class Braz:
         for line in result.changed_lines:
             for i, ls in enumerate(result.lines_start):
                 if result.lines_end[i] >= line >= ls:
-                    append_if_not_in(result.impacted_macros,
-                                     self._get_macros_in_line(
-                                         result.macros_file[i]))
+                    macros = self._get_macros_in_line(result.macros_file[i])
+                    if macros:
+                        append_if_not_in(result.impacted_macros, macros)
+                        append_if_not_in(result.impacted_macros,
+                                         self._get_nested_macros(i, result))
+
+    def _get_nested_macros(self, line, result):
+        macros = []
+
+        for i, _ in enumerate(result.macros_file):
+            if (result.lines_start[i] > result.lines_start[line]
+               and result.lines_end[i] < result.lines_end[line]):
+                macros += self._get_macros_in_line(result.macros_file[i])
+
+        return macros
 
     def _is_clean(self, macro):
         return ('&&' not in macro and '>' not in macro
