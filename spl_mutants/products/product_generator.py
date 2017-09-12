@@ -3,6 +3,7 @@ from tinydb import Query
 from tinydb.operations import set
 
 from spl_mutants.products.gcc_strategies import GCCConfig, Executor
+from spl_mutants.util import print_progress, pprint_progress
 
 
 class ProductGenerator:
@@ -26,7 +27,9 @@ class ProductGenerator:
         if not os.path.exists(output_dir):
             os.mkdir(output_dir)
 
-        for product in products:
+        products_total = len(products)
+        print('Preparing generation for %s configurations...' % products_total)
+        for i, product in enumerate(products):
             product_dir = os.path.join(output_dir, product['product_code'])
 
             if not os.path.exists(product_dir):
@@ -40,8 +43,13 @@ class ProductGenerator:
 
             self.db.insert(_initialize_mutant(original, product, product_dir))
 
-            for mutant in product['mutants']:
+            mutants_total = len(product['mutants'])
+
+            for j, mutant in enumerate(product['mutants']):
                 self.db.insert(_initialize_mutant(mutant, product, product_dir))
+                pprint_progress((i + 1), products_total, (j + 1), mutants_total)
+            print_progress((i + 1), products_total)
+        print(' [DONE]')
 
     def is_done(self):
         return (len(self.db.all()) > 0 and
@@ -52,7 +60,6 @@ class ProductGenerator:
         mutants_total = len(mutants)
 
         print('Starting generation for %s products...' % mutants_total)
-
         for i, mutant in enumerate(mutants):
             if not mutant['generated']:
                 config = GCCConfig()
@@ -76,7 +83,8 @@ class ProductGenerator:
                     (Query().product_code == mutant['product_code'])
                 )
 
-            _print_progress(i + 1, mutants_total)
+            print_progress(i + 1, mutants_total)
+        print(' [DONE]')
 
 
 def _initialize_mutant(mutant, product, product_dir):
@@ -109,9 +117,3 @@ def _get_d_params(features):
 def _get_i_params(includes):
     return ['-I{include}'.format(include=include) for include in includes]
 
-
-def _print_progress(c, t):
-    analysed_ratio = float(c) / t
-
-    print('%c[2K' % 27, end='\r')
-    print('%i/%i (%.2f%%)' % (c, t, analysed_ratio * 100), end='', flush=True)

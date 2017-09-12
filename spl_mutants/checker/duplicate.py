@@ -8,6 +8,7 @@ from pygments.lexers.javascript import JavascriptLexer
 from pygments.formatters.terminal import TerminalFormatter
 
 from spl_mutants.checker.common import get_filename, diff
+from spl_mutants.util import pprint_progress, print_progress
 
 
 class DuplicateChecker:
@@ -22,59 +23,77 @@ class DuplicateChecker:
 
     def run(self, verbose=False):
         products = self.products_db.all()
+        products_total = len(products)
+        equals = {}
 
-        for product in products:
+        print('Checking duplicates...')
+        for i, product in enumerate(products):
             product_dir = os.path.join(self.state.products_dir,
                                        product['product_code'])
 
             useful_mutants = self.equivalence_db.search(
                 (Query().product_code == product['product_code']) &
                 (Query().useless == False))
+            mutants_total = len(useful_mutants)
+            equals[product['product_code']] = {}
 
-            for mutants in itertools.combinations(useful_mutants, 2):
-                mutant_a = mutants[0]
-                mutant_b = mutants[1]
+            for j, mutant_a in enumerate(useful_mutants):
 
-                mutant_a_product = os.path.join(
-                    product_dir, get_filename(mutant_a['file']))
-                mutant_b_product = os.path.join(
-                    product_dir, get_filename(mutant_b['file']))
+                if not _in(mutant_a['name'], equals[product['product_code']]):
+                    equals[product['product_code']][mutant_a['name']] = []
 
-                diff_result = diff(
-                    ['diff', '--binary', mutant_a_product,
-                     mutant_b_product])
+                    for mutant_b in useful_mutants:
+                        if mutant_b['name'] != mutant_a['name']:
+                            mutant_a_product = os.path.join(
+                                product_dir, get_filename(mutant_a['file']))
+                            mutant_b_product = os.path.join(
+                                product_dir, get_filename(mutant_b['file']))
 
-                self.db.insert(
-                    {
-                        'mutant_a': {
-                            'file': mutant_a['file'],
-                            'name': mutant_a['name'],
-                            'operator': mutant_a['operator']
-                        },
-                        'mutant_b': {
-                            'file': mutant_b['file'],
-                            'name': mutant_b['name'],
-                            'operator': mutant_b['operator']
-                        },
-                        'product': product['features'],
-                        'product_code': product['product_code'],
-                        'duplicate': diff_result[0]
-                    }
-                )
+                            if (os.path.exists(mutant_a_product)
+                               and os.path.exists(mutant_b_product)):
+                                diff_result = diff(
+                                    ['diff', '--binary', mutant_a_product,
+                                     mutant_b_product])
+
+                                if diff_result[0]:
+                                    equals[product['product_code']][mutant_a['name']].append(mutant_b['name'])
+                pprint_progress((i + 1), products_total, (j + 1), mutants_total)
+
+            self.db.insert(
+                {
+                    'product_code': product['product_code'],
+                    'configuration': product['features'],
+                    'useful': list(equals[product['product_code']].keys()),
+
+                }
+            )
+            print_progress((i + 1), products_total)
+        print(' [DONE]')
 
         if verbose:
             self._print_result()
 
     def _print_result(self):
-        output = {
-            'products_duplicate':
-                len(self.db.search(Query().duplicate == True))
-        }
+        useful = self.db.all()
+        total = 0
 
-        print('\n=== DUPLICATE CHECKER ===')
+        for u in useful:
+            total += len(u['useful'])
+
+        output = {
+            'useful': useful,
+            'total': total
+        }
 
         print(highlight(
             code=json.dumps(output, indent=True, sort_keys=True),
             lexer=JavascriptLexer(),
             formatter=TerminalFormatter()
         ))
+
+
+def _in(e, d):
+    for k in d.keys():
+        if e in d[k]:
+            return True
+    return False

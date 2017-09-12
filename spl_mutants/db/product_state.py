@@ -5,6 +5,7 @@ from tinydb import Query
 from tinydb.operations import increment
 
 from spl_mutants.db.operations import append
+from spl_mutants.util import pprint_progress, print_progress
 
 
 class ProductState:
@@ -17,12 +18,17 @@ class ProductState:
 
     def _set_products_table(self):
         mutants = self.impact_analysis_state.get_mutants()
+        total_mutants = len(mutants)
 
-        for mutant in mutants:
+        print('Initializing products database for %i mutants...' % total_mutants)
+        for i, mutant in enumerate(mutants):
             products = _impacted_products(mutant['impact_analysis'])
-
-            for product in products:
+            for j, product in enumerate(products):
+                total_products = len(products)
                 self._insert_product(product, mutant)
+                pprint_progress((i + 1), total_mutants, (j + 1), total_products)
+            print_progress((i + 1), total_mutants)
+        print(' [DONE]')
 
     def _insert_product(self, product, mutant):
         product_code = _gen_product_code(product)
@@ -56,7 +62,7 @@ def _mutant_dict(mutant):
 
 
 def _gen_product_code(features):
-    return hashlib.md5(str(features).encode('utf-8')).hexdigest()
+    return hashlib.md5(str(sorted(features)).encode('utf-8')).hexdigest()
 
 
 def _impacted_products(impact_analysis):

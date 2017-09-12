@@ -14,22 +14,21 @@ def main():
     config = Config()
 
     config.output_dir = os.path.abspath('/home/marcioaug/Projects/marcioaug/'
-                                        'spl-mutants/tests/examples/test8_c'
-                                        '/output')
+                                        'spl-mutants/tests/examples/ssl_asn1_c'
+                                        '/all_macros')
     config.mutants_dir = os.path.abspath('/home/marcioaug/Projects/marcioaug/'
-                                         'spl-mutants/tests/examples/test8_c/'
-                                         'mutants')
-    config.source_file = os.path.abspath('/home/marcioaug/Projects/marcioaug/'
-                                         'spl-mutants/tests/examples/test8_c/'
-                                         'test.c')
-
+                                         'mutants/openssl/ssl/ssl_asn1_c')
     # config.source_file = os.path.abspath('/home/marcioaug/Projects/marcioaug/'
-    #                                      'openssl/ssl/methods.c')
+    #                                      'spl-mutants/tests/examples/test8_c/'
+    #                                      'test.c')
+
+    config.source_file = os.path.abspath('/home/marcioaug/Projects/marcioaug/'
+                                         'openssl/ssl/ssl_asn1.c')
 
     config.include_dirs = []
-    # config.include_dirs.append('/home/marcioaug/Projects/marcioaug/openssl/include')
-    # config.include_dirs.append('/home/marcioaug/Projects/marcioaug/openssl/crypto/include')
-    # config.include_dirs.append('/home/marcioaug/Projects/marcioaug/openssl')
+    config.include_dirs.append('/home/marcioaug/Projects/marcioaug/openssl/include')
+    config.include_dirs.append('/home/marcioaug/Projects/marcioaug/openssl/crypto/include')
+    config.include_dirs.append('/home/marcioaug/Projects/marcioaug/openssl')
 
     if os.path.exists(config.output_dir):
         shutil.rmtree(config.output_dir)

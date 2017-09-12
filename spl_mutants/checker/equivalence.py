@@ -7,6 +7,7 @@ from pygments.lexers.javascript import JavascriptLexer
 from pygments.formatters.terminal import TerminalFormatter
 
 from spl_mutants.checker.common import get_filename, diff
+from spl_mutants.util import pprint_progress, print_progress
 
 
 class EquivalenceChecker:
@@ -21,17 +22,25 @@ class EquivalenceChecker:
     def run(self, verbose=False):
         products = self.products_db.all()
 
-        for product in products:
+        print('Checking equivalence...')
+        products_total = len(products)
+        for i, product in enumerate(products):
             product_dir = os.path.join(self.state.products_dir,
                                        product['product_code'])
             original_product = os.path.join(
                 product_dir, get_filename(self.state.source_file))
 
-            for mutant in product['mutants']:
+            mutants_total = len(product['mutants'])
+            for j, mutant in enumerate(product['mutants']):
                 mutant_product = os.path.join(
                     product_dir, get_filename(mutant['file']))
-                diff_result = diff(
-                    ['diff', '--binary', original_product, mutant_product])
+
+                diff_result = [True]
+
+                if (os.path.exists(original_product)
+                   and os.path.exists(mutant_product)):
+                    diff_result = diff(
+                        ['diff', '--binary', original_product, mutant_product])
 
                 self.db.insert(
                     {
@@ -44,10 +53,29 @@ class EquivalenceChecker:
                     }
                 )
 
+                pprint_progress((i + 1), products_total, (j + 1), mutants_total)
+            print_progress((i + 1), products_total)
+        print(' [DONE]')
+
         if verbose:
             self._print_result()
 
     def _print_result(self):
+
+        useful = self.state.db.table('equivalence').search(
+                    Query().useless == False)
+
+        useful_to_print = []
+
+        for mutant in useful:
+            useful_to_print.append(
+                {
+                    'product_code': mutant['product_code'],
+                    'name': mutant['name'],
+                    'product': mutant['product']
+                }
+            )
+
         output = {
             'total_mutants':
                 len(self.state.db.table('mutants').all()),
@@ -64,8 +92,6 @@ class EquivalenceChecker:
                 len(self.state.db.table('equivalence').search(
                     Query().useless == True))
         }
-
-        print('\n=== EQUIVALENCE CHECKER ===')
 
         print(highlight(
             code=json.dumps(output, indent=True, sort_keys=True),
