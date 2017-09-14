@@ -31,10 +31,12 @@ class Executor:
             shutil.copy2(os.path.abspath(self.config.input_file), source_file)
             command[-3] = source_file
 
-        subprocess.call(command, shell=False, stderr=subprocess.DEVNULL)
-
         if log:
+            subprocess.call(command, shell=False)
             self._run_preprocessor_only(source_file)
+        else:
+            subprocess.call(command, shell=False, stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL)
 
         if source_file is not None and source_file != self.config.input_file:
             os.remove(source_file)

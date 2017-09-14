@@ -55,7 +55,7 @@ class ProductGenerator:
         return (len(self.db.all()) > 0 and
                 len(self.db.search(Query().generated == False)) == 0)
 
-    def generate(self, params=None):
+    def generate(self, params=None, verbose=False, debug=False):
         mutants = self.db.all()
         mutants_total = len(mutants)
 
@@ -76,7 +76,7 @@ class ProductGenerator:
                 config.source_file = self.state.source_file
 
                 Executor(config=config,
-                         strategy=self.gcc_strategy).run(log=True)
+                         strategy=self.gcc_strategy).run(log=debug)
                 self.db.update(
                     set('generated', True),
                     (Query().name == mutant['name']) &

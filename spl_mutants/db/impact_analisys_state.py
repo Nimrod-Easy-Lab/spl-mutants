@@ -7,10 +7,11 @@ from tinydb.operations import set, add
 
 class ImpactAnalysisState:
 
-    def __init__(self, state):
+    def __init__(self, state, disabled=False):
         self.state = state
         self.db = state.db.table('mutants')
         self._set_mutants_table(state.mutants_dir)
+        self.disabled = disabled
 
     def get_mutants(self):
         return self.db.all()
@@ -20,7 +21,10 @@ class ImpactAnalysisState:
 
     def set_impact_analysis(self, mutant, result):
 
-        impacted_macros = result.all_macros
+        if self.disabled:
+            impacted_macros = result.all_macros
+        else:
+            impacted_macros = result.impacted_macros
 
         self.db.update(
             set('impact_analysis', {
