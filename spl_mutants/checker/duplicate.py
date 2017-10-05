@@ -63,7 +63,7 @@ class DuplicateChecker:
                 {
                     'product_code': product['product_code'],
                     'configuration': product['features'],
-                    'useful': list(equals[product['product_code']].keys()),
+                    'useful': equals[product['product_code']],
 
                 }
             )

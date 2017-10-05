@@ -12,5 +12,5 @@ def diff(command_line):
 
     if output[0] == 0:
         return True, output
-    else:
-        return False, output
+
+    return False, output
