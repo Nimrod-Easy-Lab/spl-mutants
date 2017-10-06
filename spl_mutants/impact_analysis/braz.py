@@ -61,7 +61,7 @@ class Braz:
         stack_lines = []
         line = 1
         for l in file:
-            l = l.replace('# ', '#')
+            l = re.sub(r'# +', '#', l)
             if l.strip().startswith('#if'):
                 stack_macros.append(l)
                 stack_lines.append(line)

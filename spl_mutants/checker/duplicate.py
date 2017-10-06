@@ -63,8 +63,8 @@ class DuplicateChecker:
                 {
                     'product_code': product['product_code'],
                     'configuration': product['features'],
-                    'useful': equals[product['product_code']],
-
+                    'useful': list(equals[product['product_code']].keys()),
+                    'duplicates': equals[product['product_code']]
                 }
             )
             print_progress((i + 1), products_total)
