@@ -76,13 +76,30 @@ class DuplicateChecker:
     def _print_result(self):
         useful = self.db.all()
         total = 0
+        duplicate_set = []
+        duplicate_status = {}
 
         for u in useful:
             total += len(u['useful'])
+            for d in u['duplicates'].keys():
+                duplicate_set.append(u['duplicates'][d] + [d])
+
+        for s in duplicate_set:
+            for m in s:
+                if m not in duplicate_status.keys():
+                    duplicate_status[m] = {
+                        'duplicate': 0 ,
+                        'not_duplicate': 0
+                    }
+                if len(s) > 1:
+                    duplicate_status[m]['duplicate'] += 1
+                else:
+                    duplicate_status[m]['not_duplicate'] += 1
 
         output = {
-            'useful': useful,
-            'total': total
+            '_useful': useful,
+            'total': total,
+            'duplicate_status': duplicate_status
         }
 
         print(highlight(

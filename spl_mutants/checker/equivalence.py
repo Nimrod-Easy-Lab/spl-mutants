@@ -86,6 +86,7 @@ class EquivalenceChecker:
 
         mutants_to_print = {}
         operators = {}
+        mutants_status = {}
 
         for mutant in mutants:
             if mutant['product_code'] not in mutants_to_print.keys():
@@ -101,7 +102,14 @@ class EquivalenceChecker:
                 operators[mutant['operator']] = {
                     'useless': 0,
                     'useful': 0,
-                    'do_not_compile': 0
+                    'not_compile': 0
+                }
+
+            if mutant['name'] not in mutants_status.keys():
+                mutants_status[mutant['name']] = {
+                    'useless': 0,
+                    'useful': 0,
+                    'not_compile': 0
                 }
 
             if not mutant['compile_error']:
@@ -113,6 +121,7 @@ class EquivalenceChecker:
                         mutant['product_code']
                     ]['useless_total'] += 1
                     operators[mutant['operator']]['useless'] += 1
+                    mutants_status[mutant['name']]['useless'] += 1
                 else:
                     mutants_to_print[
                         mutant['product_code']
@@ -121,8 +130,10 @@ class EquivalenceChecker:
                         mutant['product_code']
                     ]['useful_total'] += 1
                     operators[mutant['operator']]['useful'] += 1
+                    mutants_status[mutant['name']]['useful'] += 1
             else:
-                operators[mutant['operator']]['do_not_compile'] += 1
+                operators[mutant['operator']]['not_compile'] += 1
+                mutants_status[mutant['name']]['not_compile'] += 1
 
         compiled_products = 0
         products_not_equivalent = len(self.state.db.table('equivalence').search(
@@ -152,7 +163,8 @@ class EquivalenceChecker:
             'products_not_equivalent': products_not_equivalent,
             'reduction': 1 - (products_not_equivalent/compiled_products) if compiled_products != 0 else 0,
             '_products': mutants_to_print,
-            '_operators': operators
+            '_operators': operators,
+            '_mutants': mutants_status
         }
 
         print(highlight(
