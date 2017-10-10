@@ -19,9 +19,10 @@ def main():
     parser.add_argument('-s', '--source_file', type=str, required=True)
     parser.add_argument('-M', '--mutants_dir', type=str, required=True)
     parser.add_argument('-O', '--output_dir', type=str, required=True)
+    parser.add_argument('-P', '--gcc_params', type=str, required=False)
     parser.add_argument('-I', '--includes', nargs='*')
     parser.add_argument('-v', '--verbose', default=False, action='store_true')
-    parser.add_argument('-D', '--debug', default=False, action='store_true')
+    parser.add_argument('-E', '--debug', default=False, action='store_true')
     parser.add_argument('--disable-impact-analysis', default=False, action='store_true')
     parser.add_argument('--no-check-duplicates', default=False, action='store_true')
 
@@ -31,6 +32,7 @@ def main():
     config.output_dir = os.path.abspath(p_args.output_dir)
     config.mutants_dir = os.path.abspath(p_args.mutants_dir)
     config.source_file = os.path.abspath(p_args.source_file)
+    gcc_params = str(p_args.gcc_params).split(' ') if p_args.gcc_params is not None else []
     config.include_dirs = [os.path.abspath(i) for i in p_args.includes]
 
     if os.path.exists(config.output_dir):
@@ -49,7 +51,7 @@ def main():
                                          gcc_strategy=gcc_to_tce)
 
     if not product_generator.is_done():
-        product_generator.generate(debug=p_args.debug)
+        product_generator.generate(debug=p_args.debug, params=gcc_params)
 
     EquivalenceChecker(product_state=product_state).run(verbose=p_args.verbose)
     if not p_args.no_check_duplicates:
