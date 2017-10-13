@@ -20,7 +20,9 @@ def main():
     parser.add_argument('-M', '--mutants_dir', type=str, required=True)
     parser.add_argument('-O', '--output_dir', type=str, required=True)
     parser.add_argument('-P', '--gcc_params', type=str, required=False)
-    parser.add_argument('-I', '--includes', nargs='*')
+    parser.add_argument('-I', '--includes', nargs='*', required=False)
+    parser.add_argument('-D', '--defines', nargs='*', required=False)
+    parser.add_argument('-U', '--undefines', nargs='*', required=False)
     parser.add_argument('-v', '--verbose', default=False, action='store_true')
     parser.add_argument('-E', '--debug', default=False, action='store_true')
     parser.add_argument('--disable-impact-analysis', default=False, action='store_true')
@@ -28,12 +30,12 @@ def main():
 
     p_args = parser.parse_args()
 
-    config.include_dirs = []
     config.output_dir = os.path.abspath(p_args.output_dir)
     config.mutants_dir = os.path.abspath(p_args.mutants_dir)
     config.source_file = os.path.abspath(p_args.source_file)
-    gcc_params = str(p_args.gcc_params).split(' ') if p_args.gcc_params is not None else []
-    config.include_dirs = [os.path.abspath(i) for i in p_args.includes]
+    gcc_params = ['-D' + a for a in p_args.defines] if p_args.defines is not None else []
+    gcc_params += ['-U' + a for a in p_args.undefines] if p_args.undefines is not None else []
+    config.include_dirs = [os.path.abspath(i) for i in p_args.includes] if p_args.includes is not None else []
 
     if os.path.exists(config.output_dir):
         shutil.rmtree(config.output_dir)

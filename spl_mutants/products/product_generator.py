@@ -67,7 +67,7 @@ class ProductGenerator:
                 if not params:
                     config.params = []
                 else:
-                    config.params = params
+                    config.params = list(params)
 
                 config.params += _get_i_params(self.state.include_dirs)
                 config.params += _get_d_params(mutant['features'])
