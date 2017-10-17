@@ -97,9 +97,7 @@ class DuplicateChecker:
                     duplicate_status[m]['not_duplicate'] += 1
 
         output = {
-            '_useful': useful,
-            'total': total,
-            'duplicate_status': duplicate_status
+            'products_useful': total,
         }
 
         print(highlight(

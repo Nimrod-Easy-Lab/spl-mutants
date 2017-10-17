@@ -160,11 +160,7 @@ class EquivalenceChecker:
                 self.state.db.search(
                     Query().type == 'config')[0]['products'],
             'products_compiled': compiled_products,
-            'products_not_equivalent': products_not_equivalent,
-            'reduction': 1 - (products_not_equivalent/compiled_products) if compiled_products != 0 else 0,
-            '_products': mutants_to_print,
-            '_operators': operators,
-            '_mutants': mutants_status
+            'products_useful': products_not_equivalent
         }
 
         print(highlight(

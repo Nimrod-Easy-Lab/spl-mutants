@@ -48,16 +48,17 @@ class Executor:
         if source_file:
             command[-3] = source_file
 
-        subprocess.call(command, shell=False)
+        subprocess.call(command, shell=False, stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL)
 
 
 def gcc_to_tce(config):
-    params = ['-c', '-w', '-O3'] + config.params
+    params = ['-c', ' -Wfatal-errors', '-Werror=implicit', '-O3'] + config.params
     return _gcc(config=config, params=params)
 
 
 def gcc_to_log(config):
-    params = ['-E', '-P', '-w', '-O3'] + config.params
+    params = ['-E', '-P', '-O3'] + config.params
     to_log = _gcc(config=config, params=params)
     to_log[-1] = to_log[-1] + '.c'
     return to_log
