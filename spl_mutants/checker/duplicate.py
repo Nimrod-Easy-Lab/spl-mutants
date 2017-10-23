@@ -1,11 +1,6 @@
 import os
-import json
-import itertools
 
 from tinydb import Query
-from pygments import highlight
-from pygments.lexers.javascript import JavascriptLexer
-from pygments.formatters.terminal import TerminalFormatter
 
 from spl_mutants.checker.common import get_filename, diff
 from spl_mutants.util import pprint_progress, print_progress
@@ -70,10 +65,9 @@ class DuplicateChecker:
             print_progress((i + 1), products_total)
         print(' [DONE]')
 
-        if verbose:
-            self._print_result()
+        return self._collect_result()
 
-    def _print_result(self):
+    def _collect_result(self):
         useful = self.db.all()
         total = 0
         duplicate_set = []
@@ -88,7 +82,7 @@ class DuplicateChecker:
             for m in s:
                 if m not in duplicate_status.keys():
                     duplicate_status[m] = {
-                        'duplicate': 0 ,
+                        'duplicate': 0,
                         'not_duplicate': 0
                     }
                 if len(s) > 1:
@@ -96,15 +90,47 @@ class DuplicateChecker:
                 else:
                     duplicate_status[m]['not_duplicate'] += 1
 
-        output = {
-            'products_useful': total,
-        }
+        totally_useless = 0
+        totally_useful = 0
+        partially_useless = 0
+        operators = {}
 
-        print(highlight(
-            code=json.dumps(output, indent=True, sort_keys=True),
-            lexer=JavascriptLexer(),
-            formatter=TerminalFormatter()
-        ))
+        for key in duplicate_status.keys():
+
+            mutant = self.state.db.table('mutants').search(
+                    Query().name == key)[0]
+
+            operator = mutant['operator']
+
+            if operator not in operators.keys():
+                operators[operator] = {
+                    'totally_useless': 0,
+                    'totally_useful': 0,
+                    'partially_useless': 0,
+                    'products_useless': 0,
+                    'products_useful': 0
+                }
+
+            operators[operator]['products_useless'] += duplicate_status[key]['duplicate']
+            operators[operator]['products_useful'] += duplicate_status[key]['not_duplicate']
+
+            if duplicate_status[key]['not_duplicate'] == 0:
+                totally_useless += 1
+                operators[operator]['totally_useless'] += 1
+            elif duplicate_status[key]['duplicate'] == 0:
+                totally_useful += 1
+                operators[operator]['totally_useful'] += 1
+            else:
+                partially_useless += 1
+                operators[operator]['partially_useless'] += 1
+
+        return {
+            'operators': operators,
+            'totally_useless': totally_useless,
+            'totally_useful': totally_useful,
+            'partially_useless': partially_useless,
+            'products_useful': total
+        }
 
 
 def _in(e, d):

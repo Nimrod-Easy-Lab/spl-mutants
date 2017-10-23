@@ -1,14 +1,11 @@
 import os
-import json
 
 from tinydb import Query
-from pygments import highlight
-from pygments.lexers.javascript import JavascriptLexer
-from pygments.formatters.terminal import TerminalFormatter
 
 from spl_mutants.checker.common import get_filename, diff
 from spl_mutants.util import pprint_progress, print_progress
 
+import json
 
 class EquivalenceChecker:
 
@@ -63,10 +60,9 @@ class EquivalenceChecker:
             print_progress((i + 1), products_total)
         print(' [DONE]')
 
-        if verbose:
-            self._print_result()
+        return self._collect_result()
 
-    def _print_result(self):
+    def _collect_result(self):
 
         useful = self.state.db.table('equivalence').search(
                     Query().useless == False)
@@ -103,8 +99,7 @@ class EquivalenceChecker:
                     'useless': 0,
                     'useful': 0,
                     'not_compile': 0,
-                    'compile': 0,
-                    'mutants': 0
+                    'compile': 0
                 }
 
             if mutant['name'] not in mutants_status.keys():
@@ -160,19 +155,32 @@ class EquivalenceChecker:
             compiled_products += mutants_to_print[product_code]['mutants_compiled']
 
         totally_useless = []
-        operators_table = []
+        totally_useful = []
+        operators_table = {}
+        partially_useless = []
 
         for key in mutants_status.keys():
             if mutants_status[key]['compile'] == mutants_status[key]['useless']:
                 totally_useless.append(mutants_status[key])
+            elif mutants_status[key]['compile'] == mutants_status[key]['useful']:
+                totally_useful.append(mutants_status[key])
+            else:
+                partially_useless.append(mutants_status[key])
 
         for key in operators.keys():
-            operators_table.append({
-                'mutants': operators[key]
-            })
-            operators[mutant['operator']]['mutants'] += 1
+            operators_table[key] = {
+                'mutants': len(self.state.db.table('mutants').search(
+                    Query().operator == key)),
+                'totally_useless': len([m for m in totally_useless if m['operator'] == key]),
+                'totally_useful': len([m for m in totally_useful if m['operator'] == key]),
+                'products_total': operators[key]['compile'] + operators[key]['not_compile'],
+                'products_compiled': operators[key]['compile'],
+                'partially_useless': len([m for m in partially_useless if m['operator'] == key]),
+                'products_useless': operators[key]['useless'],
+                'products_useful': operators[key]['useful'],
+            }
 
-        output = {
+        return {
             'macros': len(self.state.db.search(
                     Query().type == 'config')[0]['macros']),
             'total_mutants':
@@ -182,12 +190,8 @@ class EquivalenceChecker:
                     Query().type == 'config')[0]['products'],
             'products_compiled': compiled_products,
             'totally_useless': len(totally_useless),
-            '_operators': operators
+            'totally_useful': len(totally_useful),
+            'operators': operators_table,
+            'partially_useless': len(partially_useless)
         }
-
-        print(highlight(
-            code=json.dumps(output, indent=True, sort_keys=True),
-            lexer=JavascriptLexer(),
-            formatter=TerminalFormatter()
-        ))
 
