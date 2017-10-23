@@ -53,7 +53,7 @@ class Executor:
 
 
 def gcc_to_tce(config):
-    params = ['-c', ' -Wfatal-errors', '-Werror=implicit', '-O3'] + config.params
+    params = ['-c', '-Wfatal-errors', '-Werror=implicit', '-O3'] + config.params
     return _gcc(config=config, params=params)
 
 

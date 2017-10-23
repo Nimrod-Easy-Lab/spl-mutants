@@ -1,5 +1,5 @@
 import datetime
-from spl_mutants.impact_analysis.strategies import larissa_braz_strategy
+from spl_mutants.impact_analysis.strategies import larissa_braz_strategy, get_macros_strategy
 
 
 class Runner:
@@ -14,6 +14,9 @@ class Runner:
     def run_with_profiling(self, file_a, file_b):
         start_time = datetime.datetime.now()
         return self.run(file_a, file_b), datetime.datetime.now() - start_time
+
+    def get_macros(self, file_a):
+        return get_macros_strategy(open(file_a, "rt").readlines())
 
 
 def _read_files(file_a, file_b):

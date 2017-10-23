@@ -17,6 +17,8 @@ class ImpactAnalysisRunner:
     def run(self):
 
         total_mutants = len(self.mutants)
+        macros = self.runner.get_macros(self.original_program).all_macros
+        self.impact_analysis_state.set_macros(macros=macros)
 
         if not self.disabled:
             print('Starting impact analysis for %i mutants...' % total_mutants)

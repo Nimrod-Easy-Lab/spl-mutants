@@ -19,6 +19,12 @@ class ImpactAnalysisState:
     def get_source_file(self):
         return self.state.source_file
 
+    def set_macros(self, macros):
+        self.state.db.update(
+            set('macros', macros),
+            Query().type == 'config'
+        )
+
     def set_impact_analysis(self, mutant, result):
 
         if self.disabled:

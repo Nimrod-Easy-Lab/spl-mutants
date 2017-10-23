@@ -27,7 +27,8 @@ class State:
             'product_versions': 0,
             'products_dir': None,
             'products': 0,
-            'products_impacted': 0
+            'products_impacted': 0,
+            'macros': []
         })
 
     def _state(self):

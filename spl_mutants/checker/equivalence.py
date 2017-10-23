@@ -81,7 +81,7 @@ class EquivalenceChecker:
                     'product': mutant['product']
                 }
             )
-
+    
         mutants = self.state.db.table('equivalence').all()
 
         mutants_to_print = {}
@@ -102,14 +102,19 @@ class EquivalenceChecker:
                 operators[mutant['operator']] = {
                     'useless': 0,
                     'useful': 0,
-                    'not_compile': 0
+                    'not_compile': 0,
+                    'compile': 0,
+                    'mutants': 0
                 }
 
             if mutant['name'] not in mutants_status.keys():
                 mutants_status[mutant['name']] = {
+                    'name': mutant['name'],
+                    'operator': mutant['operator'],
                     'useless': 0,
                     'useful': 0,
-                    'not_compile': 0
+                    'not_compile': 0,
+                    'compile': 0
                 }
 
             if not mutant['compile_error']:
@@ -131,6 +136,8 @@ class EquivalenceChecker:
                     ]['useful_total'] += 1
                     operators[mutant['operator']]['useful'] += 1
                     mutants_status[mutant['name']]['useful'] += 1
+                operators[mutant['operator']]['compile'] += 1
+                mutants_status[mutant['name']]['compile'] += 1
             else:
                 operators[mutant['operator']]['not_compile'] += 1
                 mutants_status[mutant['name']]['not_compile'] += 1
@@ -152,15 +159,30 @@ class EquivalenceChecker:
             mutants_to_print[product_code]['reduction'] = reduction
             compiled_products += mutants_to_print[product_code]['mutants_compiled']
 
+        totally_useless = []
+        operators_table = []
+
+        for key in mutants_status.keys():
+            if mutants_status[key]['compile'] == mutants_status[key]['useless']:
+                totally_useless.append(mutants_status[key])
+
+        for key in operators.keys():
+            operators_table.append({
+                'mutants': operators[key]
+            })
+            operators[mutant['operator']]['mutants'] += 1
 
         output = {
+            'macros': len(self.state.db.search(
+                    Query().type == 'config')[0]['macros']),
             'total_mutants':
                 len(self.state.db.table('mutants').all()),
             'products_total':
                 self.state.db.search(
                     Query().type == 'config')[0]['products'],
             'products_compiled': compiled_products,
-            'products_useful': products_not_equivalent
+            'totally_useless': len(totally_useless),
+            '_operators': operators
         }
 
         print(highlight(
