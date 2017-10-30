@@ -138,8 +138,11 @@ class EquivalenceChecker:
                 mutants_status[mutant['name']]['not_compile'] += 1
 
         compiled_products = 0
-        products_not_equivalent = len(self.state.db.table('equivalence').search(
-            Query().useless == False))
+        products_useful = len(self.state.db.table('equivalence').search(
+            (Query().useless == False) & (Query().compile_error == False) & (Query().invalid_configuration == False)))
+        products_useless = len(self.state.db.table('equivalence').search(
+            (Query().useless == True) & (Query().compile_error == False) & (Query().invalid_configuration == False)))
+
 
         for product_code in mutants_to_print.keys():
             useless_total = mutants_to_print[product_code]['useless_total']
@@ -189,6 +192,8 @@ class EquivalenceChecker:
                 self.state.db.search(
                     Query().type == 'config')[0]['products'],
             'products_compiled': compiled_products,
+            'products_useless': products_useless,
+            'products_useful': products_useful,
             'totally_useless': len(totally_useless),
             'totally_useful': len(totally_useful),
             'operators': operators_table,

@@ -61,8 +61,6 @@ def main():
         product_generator.generate(debug=p_args.debug, params=gcc_params)
 
     equivalence_res = EquivalenceChecker(product_state=product_state).run()
-    if not p_args.no_check_duplicates:
-        duplicate_res = DuplicateChecker(product_state=product_state).run()
 
     operators = []
 
@@ -77,46 +75,39 @@ def main():
         products_useless = equivalence_res['operators'][key]['products_useless']
         products_useful = equivalence_res['operators'][key]['products_useful']
 
-        if key in duplicate_res['operators'].keys():
-            partially_useless = duplicate_res['operators'][key]['partially_useless']
-            totally_useless = (equivalence_res['operators'][key]['totally_useless']
-                               + duplicate_res['operators'][key]['totally_useless'])
-            totally_useful = duplicate_res['operators'][key]['totally_useful']
-            products_useless = (equivalence_res['operators'][key]['products_useless']
-                                + duplicate_res['operators'][key]['products_useless'])
-            products_useful = duplicate_res['operators'][key]['products_useful']
-
         operators.append({
             '1_operator': key,
-            '2_mutants': mutants,
-            '5_products_total': products_total,
-            '6_products_compiled': products_compiled,
-            '3_partially_useless': partially_useless,
-            '4_totally_useless': totally_useless,
-            '__totally_useful': totally_useful,
-            '8_products_useful': products_useful,
-            '7_products_useless': products_useless,
-            '_csv': key + ',' + str(mutants) + ',' + str(partially_useless) + ', ,' +
-            str(totally_useless) + ', ,' + str(products_total) + ',' +
-            str(products_compiled)
+            '2_mutants_total': mutants,
+            '3_mutants_partially_useless': partially_useless,
+            '4_mutants_totally_useless': totally_useless,
+            '5_mutants_totally_useful': totally_useful,
+            '6_products_total': products_total,
+            '7_products_compiled': products_compiled,
+            '8_products_useless': products_useless,
+            '9_products_useful': products_useful,
+            '__csv': str(key) + ',' + str(mutants) + ',' +
+            str(partially_useless) + ', ,' + str(totally_useless) + ', ,' +
+            str(totally_useful) + ', ,' + str(products_total) + ',' +
+            str(products_compiled) + ',' + str(products_useless) + ', ,' +
+            str(products_useful) + ', ,',
         })
 
     output = {
         '_operators': operators,
         '1_macros': equivalence_res['macros'],
-        '2_mutants': equivalence_res['total_mutants'],
-        '5_products_total': equivalence_res['products_total'],
-        '6_products_compiled': equivalence_res['products_compiled'],
-        '3_partially_useless': duplicate_res['partially_useless'],
-        '4_totally_useless': equivalence_res['totally_useless'] + duplicate_res['totally_useless'],
-        '__totally_useful': duplicate_res['totally_useful'],
-        '__products_useful': duplicate_res['products_useful'],
-        '7_products_useless': equivalence_res['products_compiled'] - duplicate_res['products_useful'],
-        '_csv': str(equivalence_res['macros']) + ',' + str(equivalence_res['total_mutants']) + ',' +
-        str(duplicate_res['partially_useless']) + ', ,' +
-        str(equivalence_res['totally_useless'] + duplicate_res['totally_useless']) + ', ,' +
-        str(equivalence_res['products_total']) + ',' + str(equivalence_res['products_compiled']) + ',' +
-        str(equivalence_res['products_compiled'] - duplicate_res['products_useful']) + ', ,'
+        '2_mutants_total': equivalence_res['total_mutants'],
+        '3_mutants_partially_useless': equivalence_res['partially_useless'],
+        '4_mutants_totally_useless': equivalence_res['totally_useless'],
+        '5_mutants_totally_useful': equivalence_res['totally_useful'],
+        '6_products_total': equivalence_res['products_total'],
+        '7_products_compiled': equivalence_res['products_compiled'],
+        '8_products_useless': equivalence_res['products_useless'],
+        '9_products_useful': equivalence_res['products_useful'],
+        '__csv': str(equivalence_res['macros']) + ',' + str(equivalence_res['total_mutants']) + ',' +
+        str(equivalence_res['partially_useless']) + ', ,' + str(equivalence_res['totally_useless']) + ', ,' +
+        str(equivalence_res['totally_useful']) + ', ,' + str(equivalence_res['products_total']) + ',' +
+        str(equivalence_res['products_compiled']) + ',' + str(equivalence_res['products_useless']) + ', ,' +
+        str(equivalence_res['products_useful']) + ', ,',
     }
 
     if p_args.verbose:
