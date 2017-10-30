@@ -16,7 +16,7 @@ class EquivalenceChecker:
         self.products_db = self.state.db.table('products')
         self.db = self.state.db.table('equivalence')
 
-    def run(self, verbose=False):
+    def run(self):
         products = self.products_db.all()
 
         print('Checking equivalence...')

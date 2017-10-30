@@ -60,9 +60,9 @@ def main():
     if not product_generator.is_done():
         product_generator.generate(debug=p_args.debug, params=gcc_params)
 
-    equivalence_res = EquivalenceChecker(product_state=product_state).run(verbose=p_args.verbose)
+    equivalence_res = EquivalenceChecker(product_state=product_state).run()
     if not p_args.no_check_duplicates:
-        duplicate_res = DuplicateChecker(product_state=product_state).run(verbose=p_args.verbose)
+        duplicate_res = DuplicateChecker(product_state=product_state).run()
 
     operators = []
 

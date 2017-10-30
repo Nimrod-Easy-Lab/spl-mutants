@@ -16,7 +16,7 @@ class DuplicateChecker:
         self.db = self.state.db.table('duplicate')
         self.equivalence_db = self.state.db.table('equivalence')
 
-    def run(self, verbose=False):
+    def run(self):
         products = self.products_db.all()
         products_total = len(products)
         equals = {}
