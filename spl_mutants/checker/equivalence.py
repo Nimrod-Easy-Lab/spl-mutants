@@ -78,7 +78,8 @@ class EquivalenceChecker:
                 }
             )
     
-        mutants = self.state.db.table('equivalence').all()
+        mutants = self.state.db.table('equivalence').search(
+            Query().invalid_configuration == False)
 
         mutants_to_print = {}
         operators = {}
