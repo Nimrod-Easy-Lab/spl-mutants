@@ -40,6 +40,7 @@ def main():
 
         if conf['operator'] not in operators.keys():
             operators[conf['operator']] = {
+                'operator': conf['operator'],
                 'mutants_total': len(mt_table.search(Query().operator == conf['operator'])),
                 'mutants': [],
                 'mutants_equivalent': [],
@@ -82,12 +83,65 @@ def main():
         totally_equivalent += len(mutants_totally_equivalent)
         totally_not_equivalent += len(mutants_totally_not_equivalent)
 
+        print(str(op['operator']) + ',' + str(op['mutants_total']) + ','
+              + str(len(mutants_partially_equivalent)) + ', ,' +
+              str(len(mutants_totally_equivalent)) + ', ,' +
+              str(len(mutants_totally_not_equivalent)) + ', ,')
+
     print(highlight(
         code=json.dumps(operators, indent=2, sort_keys=True),
         lexer=JavascriptLexer(),
         formatter=TerminalFormatter()
     ))
 
-    print('partially_equivalent: ' + str(partially_equivalent))
-    print('totally_equivalent: ' + str(totally_equivalent))
-    print('totally_not_equivalent: ' + str(totally_not_equivalent))
+    macros = len(db.search(Query().type == 'config')[0]['macros'])
+
+    print(str(macros) + ',' + str(len(mt_table.all())) + ',' + str(partially_equivalent)
+          + ', ,' + str(totally_equivalent) + ', ,' + str(totally_not_equivalent)
+          + ', ,')
+
+    print(len(eq_table.all()))
+    print(len(eq_table.search((Query().compile_error == False))))
+    print(len(eq_table.search((Query().compile_error == True))))
+
+    mutants_with_compilation_error = []
+    mutants_without_compilation_error = []
+    mutants_without_compilation_error_2 = []
+    mutants_without_compilation_error_3 = []
+
+    for mutant in mt_table.all():
+        if len(eq_table.search(
+            (Query().name == mutant['name']) &
+            (Query().compile_error == True) &
+            (Query().invalid_configuration == False)
+        )) > 0:
+            mutants_with_compilation_error.append(mutant['name'])
+
+        if len(eq_table.search(
+                (Query().name == mutant['name']) &
+                (Query().compile_error == True) &
+                (Query().invalid_configuration == False)
+        )) == 0:
+            mutants_without_compilation_error.append(mutant['name'])
+
+        if len(eq_table.search(
+                (Query().name == mutant['name']) &
+                (Query().compile_error == True) &
+                (Query().invalid_configuration == True)
+        )) > 0:
+            mutants_without_compilation_error_2.append(mutant['name'])
+
+            if len(eq_table.search(
+                    (Query().name == mutant['name']) &
+                    (Query().compile_error == False) &
+                    (Query().invalid_configuration == True)
+            )) > 0:
+                mutants_without_compilation_error_2.append(mutant['name'])
+
+    print("------------------")
+    print(len(mutants_with_compilation_error))
+    print(len(mutants_without_compilation_error))
+    print(len(mutants_without_compilation_error_2))
+    print(len(mutants_without_compilation_error_3))
+    print(len(mt_table.all()))
+
